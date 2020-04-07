@@ -1,0 +1,71 @@
+<!DOCTYPE HTML><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>27-spring修改request的参数值，controller中参数无法自动绑定的问题</title>
+    
+<style id="wiz_custom_css">html, body {font-size: 12pt;}body {font-family: Helvetica, 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei UI', SimSun, SimHei, arial, sans-serif;line-height: 1.6;margin: 0 auto;padding: 20px 16px;padding: 1.25rem 1rem;}h1, h2, h3, h4, h5, h6 {margin:20px 0 10px;margin:1.25rem 0 0.625rem;padding: 0;font-weight: bold;}h1 {font-size:20pt;font-size:1.67rem;}h2 {font-size:18pt;font-size:1.5rem;}h3 {font-size:15pt;font-size:1.25rem;}h4 {font-size:14pt;font-size:1.17rem;}h5 {font-size:12pt;font-size:1rem;}h6 {font-size:12pt;font-size:1rem;color: #777777;margin: 1rem 0;}div, p, ul, ol, dl, li {margin:0;}blockquote, table, pre, code {margin:8px 0;}ul, ol {padding-left:32px;padding-left:2rem;}ol.wiz-list-level1 > li {list-style-type:decimal;}ol.wiz-list-level2 > li {list-style-type:lower-latin;}ol.wiz-list-level3 > li {list-style-type:lower-roman;}blockquote {padding:0 12px;padding:0 0.75rem;}blockquote > :first-child {margin-top:0;}blockquote > :last-child {margin-bottom:0;}img {border:0;max-width:100%;height:auto !important;margin:2px 0;}table {border-collapse:collapse;border:1px solid #bbbbbb;}td, th {padding:4px 8px;border-collapse:collapse;border:1px solid #bbbbbb;min-height:28px;word-break:break-all;box-sizing: border-box;}.wiz-hide {display:none !important;}</style></head>
+
+<body class="" spellcheck="false" ><div></div><h1 class="title" style="font-size:2.125rem;margin:20px 0px 0px;font-family:-apple-system, &quot;SF UI Display&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;font-weight:700;color:rgb(51, 51, 51);font-style:normal;text-align:start;text-indent:0px;background-color:rgb(255, 255, 255);">spring修改request的参数值，controller中参数无法自动绑定的问题</h1><div class="show-content" style="color: rgb(47, 47, 47); font-size: 1rem; font-family: -apple-system, 'SF UI Text', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif; font-style: normal; text-align: start; text-indent: 0px; background-color: rgb(255, 255, 255);"><pre class="hljs css" style="font-weight: 400; font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 0.813rem; display: block; padding: 15px; margin: 0px 0px 20px; color: rgb(101, 123, 131); border: 1px solid rgb(204, 204, 204); border-image-source: initial; border-image-slice: initial; border-image-width: initial; border-image-outset: initial; border-image-repeat: initial; border-radius: 0px; background-image: initial; background-attachment: initial; background-color: rgb(246, 246, 246); background-size: initial; background-origin: initial; background-clip: initial; background-position: initial; background-repeat: initial;"><code class="css" style="font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;font-size:0.75rem;color:rgb(101, 123, 131);border-radius:0px;padding:0px;border:none;">项目组某个接口的新需求，需要调用该接口的信息加密，不能显示明文的。加密都好说，调用方使用<span class="hljs-selector-tag">RSA</span>公钥加密，服务端使用<span class="hljs-selector-tag">RSA</span>私钥解密，这个不在这赘述了。
+服务端解密过程我的思路是使用过滤器国女某些特别的请求，例如登录接口等。在过滤器内将加密的信息解密，再把解密的信息放到<span class="hljs-selector-tag">request</span>内，之后<span class="hljs-selector-tag">controller</span>使用解密的信息进行后续的操作。但是遇到了一些问题，问题如下：
+1、过滤器中直接对<span class="hljs-selector-tag">request</span>使用<span class="hljs-selector-tag">setAttribute</span>方法，在之后的操作中，不能通过<span class="hljs-selector-tag">request</span><span class="hljs-selector-class">.getParameter</span>()获得对应参数。如果使用这种方法，对现有代码改动比较大，<span class="hljs-selector-tag">PASS</span>。
+2、为了使后续能够通过<span class="hljs-selector-tag">request</span><span class="hljs-selector-class">.getParameter</span>()获得参数，需自定义一个<span class="hljs-selector-tag">request</span>参数处理类，<span class="hljs-selector-tag">RequestParameterWrapper</span><span class="hljs-selector-class">.java</span>，代码如下。
+</code></pre><pre class="hljs javascript" style="font-weight: 400; font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 0.813rem; display: block; padding: 15px; margin: 0px 0px 20px; color: rgb(101, 123, 131); border: 1px solid rgb(204, 204, 204); border-image-source: initial; border-image-slice: initial; border-image-width: initial; border-image-outset: initial; border-image-repeat: initial; border-radius: 0px; background-image: initial; background-attachment: initial; background-color: rgb(246, 246, 246); background-size: initial; background-origin: initial; background-clip: initial; background-position: initial; background-repeat: initial;"><code class="javascript" style="font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;font-size:0.75rem;color:rgb(101, 123, 131);border-radius:0px;padding:0px;border:none;">public <span class="hljs-class"><span class="hljs-keyword" style="color:rgb(133, 153, 0);">class</span> <span class="hljs-title" style="color:rgb(181, 137, 0);">RequestParameterWrapper</span> <span class="hljs-keyword" style="color:rgb(133, 153, 0);">extends</span> <span class="hljs-title" style="color:rgb(181, 137, 0);">HttpServletRequestWrapper</span></span>{
+    private <span class="hljs-built_in" style="color:rgb(38, 139, 210);">Map</span>&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]&gt; params = <span class="hljs-literal">null</span>;
+    
+    <span class="hljs-comment" style="color:rgb(147, 161, 161);">//构造方法</span>
+    public RequestParameterWrapper(HttpServletRequest request){
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">super</span>(request);
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">this</span>.params = <span class="hljs-keyword" style="color:rgb(133, 153, 0);">new</span> HashMap&lt;&gt;(request.getParameterMap());
+    }
+
+    <span class="hljs-comment" style="color:rgb(147, 161, 161);">//添加参数的方法</span>
+    public <span class="hljs-keyword" style="color:rgb(133, 153, 0);">void</span> addParameters(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">Map</span>&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">Object</span>&gt; extraParams){
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">for</span>(Entry&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">Object</span>&gt; entry : extraParams){
+            addParameters(entry.getKey(),entry.getValue());
+        }
+    }
+    
+    <span class="hljs-comment" style="color:rgb(147, 161, 161);">//这四个重写的方法是很重要的！！！只有重写了这四个方法，后续才能在这个request中获取到对应的参数</span>
+    @Override
+    public <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span> getParameter(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span> name){
+        <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[] values = params.get(name);
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">if</span>(values == <span class="hljs-literal">null</span> || values.length == <span class="hljs-number" style="color:rgb(42, 161, 152);">0</span>){
+            <span class="hljs-keyword" style="color:rgb(133, 153, 0);">return</span> <span class="hljs-literal">null</span>;
+        }
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">return</span> values[<span class="hljs-number" style="color:rgb(42, 161, 152);">0</span>];
+    }
+
+    @Override
+    public <span class="hljs-built_in" style="color:rgb(38, 139, 210);">Map</span>&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]&gt; getParameterMap(){
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">return</span> params;
+    }
+
+    @Override
+    public <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[] getParamaterValues(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span> name){
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">return</span> params.get(name);        
+    }
+
+    <span class="hljs-comment" style="color:rgb(147, 161, 161);">//一般网上的方法都没有重写这个方法，如果不重写这个方法，</span>
+    <span class="hljs-comment" style="color:rgb(147, 161, 161);">//而且controller中的参数为javaBean时，bean中的属性将不会自动绑定，下面会详细讲解这个</span>
+    @Override
+    public Enumeration&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>&gt; getParameterNames(){
+        Vector&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>&gt; nameList = <span class="hljs-keyword" style="color:rgb(133, 153, 0);">new</span> Vector&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>&gt;();
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">for</span>(Entry&lt;<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]&gt; entry: params.entrySet()){
+            nameList.add(entry.getKey());
+        }
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">return</span> nameList.elements();
+    }
+
+    public <span class="hljs-keyword" style="color:rgb(133, 153, 0);">void</span> addParameters(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span> name,<span class="hljs-built_in" style="color:rgb(38, 139, 210);">Object</span> value){
+        <span class="hljs-keyword" style="color:rgb(133, 153, 0);">if</span>(<span class="hljs-literal">null</span> != value){
+            <span class="hljs-keyword" style="color:rgb(133, 153, 0);">if</span>(value instanceod <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]){
+                params.put(name,(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]) value);
+            }<span class="hljs-keyword" style="color:rgb(133, 153, 0);">else</span> <span class="hljs-keyword" style="color:rgb(133, 153, 0);">if</span>(value instanceod <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>){
+                params.put(name,<span class="hljs-keyword" style="color:rgb(133, 153, 0);">new</span> <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]{(<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span> value)});
+            }<span class="hljs-keyword" style="color:rgb(133, 153, 0);">else</span>{
+                params.put(name,<span class="hljs-keyword" style="color:rgb(133, 153, 0);">new</span> <span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>[]{<span class="hljs-built_in" style="color:rgb(38, 139, 210);">String</span>.valueOf(value)});
+            }
+        }
+    }
+}
+</code></pre><p style="font-weight: 400; margin: 0px 0px 25px;">写完这个类之后，在filter中chain.doFilter(arg1,response)第一个参数arg1，直接写这个类的对象即可，这个网上一大堆。</p><p style="margin: 0px 0px 25px;">为何<span data-wiz-span="data-wiz-span" style="color: rgb(255, 0, 0);"><b>不重写getParameterNames()方法会导致自动绑定不上bean的属性</b></span>？看源码。这个多余的源码我就不赘述，直接看问题的所在，看org.springframework.web.util.WebUtils.getParametersStartingWith()这个方法，这个方法里第二行就是调用request.getParameterNames()方法获取所有参数名称，之后在根据这个参数名称列表获取参数进行绑定操作，如果不重写这个方法，那么获取到的还是原来的参数列表，自然无法绑定参数。具体的源码自己看一下就好，这个我就不粘了。</p><br><div style="font-weight: 400; color: gray;"><small>来源：&nbsp;<a href="https://www.jianshu.com/p/79aa2d22829b">https://www.jianshu.com/p/79aa2d22829b</a></small></div></div></body></html>

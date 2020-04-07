@@ -1,0 +1,632 @@
+<!DOCTYPE HTML><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>00-与mybatis区别</title>
+    
+<style id="wiz_custom_css">html, body {font-size: 12pt;}body {font-family: Helvetica, 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei UI', SimSun, SimHei, arial, sans-serif;line-height: 1.6;margin: 0 auto;padding: 20px 16px;padding: 1.25rem 1rem;}h1, h2, h3, h4, h5, h6 {margin:20px 0 10px;margin:1.25rem 0 0.625rem;padding: 0;font-weight: bold;}h1 {font-size:20pt;font-size:1.67rem;}h2 {font-size:18pt;font-size:1.5rem;}h3 {font-size:15pt;font-size:1.25rem;}h4 {font-size:14pt;font-size:1.17rem;}h5 {font-size:12pt;font-size:1rem;}h6 {font-size:12pt;font-size:1rem;color: #777777;margin: 1rem 0;}div, p, ul, ol, dl, li {margin:0;}blockquote, table, pre, code {margin:8px 0;}ul, ol {padding-left:32px;padding-left:2rem;}ol.wiz-list-level1 > li {list-style-type:decimal;}ol.wiz-list-level2 > li {list-style-type:lower-latin;}ol.wiz-list-level3 > li {list-style-type:lower-roman;}blockquote {padding:0 12px;padding:0 0.75rem;}blockquote > :first-child {margin-top:0;}blockquote > :last-child {margin-bottom:0;}img {border:0;max-width:100%;height:auto !important;margin:2px 0;}table {border-collapse:collapse;border:1px solid #bbbbbb;}td, th {padding:4px 8px;border-collapse:collapse;border:1px solid #bbbbbb;min-height:28px;word-break:break-all;box-sizing: border-box;}.wiz-hide {display:none !important;}</style></head>
+
+<body spellcheck="false" class="" ><div>mybatis 映射dao层</div><div>hibernate 映射pojo层(省去sql)</div><div><span data-wiz-span="data-wiz-span" style="font-size: 1rem;">面试常问 二级缓存 延迟加载</span></div><div><br></div><div><style>
+@font-face{
+font-family:"Times New Roman";
+}
+
+@font-face{
+font-family:"宋体";
+}
+
+@font-face{
+font-family:"Symbol";
+}
+
+@font-face{
+font-family:"Calibri";
+}
+
+@font-face{
+font-family:"微软雅黑";
+}
+
+@font-face{
+font-family:"PingFang SC";
+}
+
+@list l0:level1{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%1.";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level2{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%2.";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level3{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%3.";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level4{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%4.";
+mso-level-tab-stop:125.8500pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level5{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%5.";
+mso-level-tab-stop:161.9000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level6{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%6.";
+mso-level-tab-stop:197.9000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level7{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%7.";
+mso-level-tab-stop:233.9000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level8{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%8.";
+mso-level-tab-stop:269.9000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l0:level9{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%9.";
+mso-level-tab-stop:305.9000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level1{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%1.";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level2{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%2.";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level3{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%3.";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level4{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%4.";
+mso-level-tab-stop:125.8500pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level5{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%5.";
+mso-level-tab-stop:161.9000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level6{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%6.";
+mso-level-tab-stop:197.9000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level7{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%7.";
+mso-level-tab-stop:233.9000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level8{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%8.";
+mso-level-tab-stop:269.9000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l1:level9{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%9.";
+mso-level-tab-stop:305.9000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level1{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%1.";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level2{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%2.";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level3{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%3.";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level4{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%4.";
+mso-level-tab-stop:125.8500pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level5{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%5.";
+mso-level-tab-stop:161.9000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level6{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%6.";
+mso-level-tab-stop:197.9000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level7{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%7.";
+mso-level-tab-stop:233.9000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level8{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%8.";
+mso-level-tab-stop:269.9000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l2:level9{
+mso-level-number-format:decimal;
+mso-level-suffix:tab;
+mso-level-text:"%9.";
+mso-level-tab-stop:305.9000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:'Times New Roman';font-size:12.0000pt;}
+
+@list l3:level1{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level2{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level3{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level4{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:144.0000pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level5{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:180.0000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level6{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:216.0000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level7{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:252.0000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level8{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:288.0000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l3:level9{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:324.0000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level1{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level2{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level3{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level4{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:144.0000pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level5{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:180.0000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level6{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:216.0000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level7{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:252.0000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level8{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:288.0000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l4:level9{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:324.0000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level1{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level2{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level3{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level4{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:144.0000pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level5{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:180.0000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level6{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:216.0000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level7{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:252.0000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level8{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:288.0000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l5:level9{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:324.0000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level1{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:36.0000pt;
+mso-level-number-position:left;
+margin-left:36.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level2{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:72.0000pt;
+mso-level-number-position:left;
+margin-left:72.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level3{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:108.0000pt;
+mso-level-number-position:left;
+margin-left:108.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level4{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:144.0000pt;
+mso-level-number-position:left;
+margin-left:144.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level5{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:180.0000pt;
+mso-level-number-position:left;
+margin-left:180.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level6{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:216.0000pt;
+mso-level-number-position:left;
+margin-left:216.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level7{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:252.0000pt;
+mso-level-number-position:left;
+margin-left:252.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level8{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:288.0000pt;
+mso-level-number-position:left;
+margin-left:288.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+@list l6:level9{
+mso-level-number-format:bullet;
+mso-level-suffix:tab;
+mso-level-text:"";
+mso-level-tab-stop:324.0000pt;
+mso-level-number-position:left;
+margin-left:324.0000pt;text-indent:-18.0000pt;font-family:Symbol;font-size:10.0000pt;}
+
+p.MsoNormal{
+mso-style-name:正文;
+mso-style-parent:"";
+margin:0pt;
+margin-bottom:.0001pt;
+mso-pagination:none;
+text-align:justify;
+text-justify:inter-ideograph;
+font-family:Calibri;
+mso-fareast-font-family:宋体;
+mso-bidi-font-family:'Times New Roman';
+font-size:10.5000pt;
+mso-font-kerning:1.0000pt;
+}
+
+h1{
+mso-style-name:"标题 1";
+mso-style-next:正文;
+margin-top:5.0000pt;
+margin-bottom:5.0000pt;
+mso-margin-top-alt:auto;
+mso-margin-bottom-alt:auto;
+mso-pagination:none;
+text-align:left;
+font-family:宋体;
+font-weight:bold;
+font-size:24.0000pt;
+mso-font-kerning:22.0000pt;
+}
+
+h2{
+mso-style-name:"标题 2";
+mso-style-noshow:yes;
+mso-style-next:正文;
+margin-top:5.0000pt;
+margin-bottom:5.0000pt;
+mso-margin-top-alt:auto;
+mso-margin-bottom-alt:auto;
+mso-pagination:none;
+text-align:left;
+font-family:宋体;
+font-weight:bold;
+font-size:18.0000pt;
+}
+
+span.10{
+font-family:'Times New Roman';
+}
+
+span.15{
+font-family:'Times New Roman';
+color:rgb(0,0,255);
+text-decoration:underline;
+text-underline:single;
+}
+
+p.p{
+mso-style-name:"普通\(网站\)";
+margin-top:5.0000pt;
+margin-right:0.0000pt;
+margin-bottom:5.0000pt;
+margin-left:0.0000pt;
+mso-margin-top-alt:auto;
+mso-margin-bottom-alt:auto;
+mso-pagination:none;
+text-align:left;
+font-family:Calibri;
+mso-fareast-font-family:宋体;
+mso-bidi-font-family:'Times New Roman';
+font-size:12.0000pt;
+}
+
+span.msoIns{
+mso-style-type:export-only;
+mso-style-name:"";
+text-decoration:underline;
+text-underline:single;
+color:blue;
+}
+
+span.msoDel{
+mso-style-type:export-only;
+mso-style-name:"";
+text-decoration:line-through;
+color:red;
+}
+@page{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;}@page Section0{
+margin-top:72.0000pt;
+margin-bottom:72.0000pt;
+margin-left:90.0000pt;
+margin-right:90.0000pt;
+size:595.3000pt 841.9000pt;
+layout-grid:15.6000pt;
+}
+div.Section0{page:Section0;}</style></div><h1 style="margin-top:8.4000pt;margin-right:0.0000pt;margin-bottom:8.4000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.5rem;background:rgb(255,255,255);"><font face="微软雅黑">第一章</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.5rem;background:rgb(255,255,255);">Hibernate与MyBatis</span><b><span style="font-family:'PingFang SC';color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate&nbsp;是当前最流行的O/R mapping框架，它出身于sf.net，现在已经成为Jboss的一部分。&nbsp;Mybatis&nbsp;是另外一种优秀的O/R mapping框架。目前属于apache的一个子项目。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis&nbsp;参考资料官网：</span><span><a href="http://www.mybatis.org/core/zh/index.html"><span class="15" style="font-family:微软雅黑;color:rgb(68,102,187);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">http://www.mybatis.org/core/zh/index.html</span></a></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">&nbsp;&nbsp;</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate参考资料：&nbsp;</span><span><a href="http://docs.jboss.org/hibernate/core/3.6/reference/zh-CN/html_single/"><span class="15" style="font-family:微软雅黑;color:rgb(68,102,187);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">http://docs.jboss.org/hibernate/core/3.6/reference/zh-CN/html_single/</span></a></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">1.1 Hibernate&nbsp;简介</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate对数据库结构提供了较为完整的封装，Hibernate的O/R Mapping实现了POJO&nbsp;和数据库表之间的映射，以及SQL&nbsp;的自动生成和执行。程序员往往只需定义好了POJO&nbsp;到数据库表的映射关系，即可通过Hibernate&nbsp;提供的方法完成持久层操作。程序员甚至不需要对SQL&nbsp;的熟练掌握，&nbsp;Hibernate/OJB&nbsp;会根据制定的存储逻辑，自动生成对应的SQL&nbsp;并调用JDBC&nbsp;接口加以执行。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">1.2 MyBatis简介</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">iBATIS&nbsp;的着力点，则在于POJO&nbsp;与SQL之间的映射关系。然后通过映射配置文件，将SQL所需的参数，以及返回的结果字段映射到指定POJO。 相对Hibernate“O/R”而言，iBATIS&nbsp;是一种“Sql Mapping”的ORM实现。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h1 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">第二章</font> <font face="微软雅黑">开发对比</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">开发速度</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的真正掌握要比Mybatis来得难些。Mybatis框架相对简单很容易上手，但也相对简陋些。个人觉得要用好Mybatis还是首先要先理解好Hibernate。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">开发社区</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate&nbsp;与Mybatis都是流行的持久层开发框架，但Hibernate开发社区相对多热闹些，支持的工具也多，更新也快，当前最高版本4.1.8。而Mybatis相对平静，工具较少，当前最高版本3.2。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">开发工作量</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate和MyBatis都有相应的代码生成工具。可以生成简单基本的DAO层方法。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">针对高级查询，</font>Mybatis需要手动编写SQL语句，以及ResultMap。而Hibernate有良好的映射机制，开发者无需关心SQL的生成与结果映射，可以更专注于业务流程。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h1 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">第三章</font> <font face="微软雅黑">系统调优对比</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的调优方案</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>1.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">制定合理的缓存策略；</font></span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>2.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">尽量使用延迟加载特性；</font></span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>3.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">采用合理的</font>Session管理机制；</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>4.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">使用批量抓取，设定合理的批处理参数（</font>batch_size）;</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>5.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">进行合理的</font>O/R映射设计</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Mybatis调优方案</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis在Session方面和Hibernate的Session生命周期是一致的，同样需要合理的Session管理机制。MyBatis同样具有二级缓存机制。&nbsp;MyBatis可以进行详细的SQL优化设计。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">SQL优化方面</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的查询会将表中的所有字段查询出来，这一点会有性能消耗。Hibernate也可以自己写SQL来指定需要查询的字段，但这样就破坏了Hibernate开发的简洁性。而Mybatis的SQL是手动编写的，所以可以按需求指定查询的字段。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate HQL语句的调优需要将SQL打印出来，而Hibernate的SQL被很多人嫌弃因为太丑了。MyBatis的SQL是自己手动写的所以调整方便。但Hibernate具有自己的日志统计。Mybatis本身不带日志统计，使用Log4j进行日志记录。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">扩展性方面</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate与具体数据库的关联只需在XML文件中配置即可，所有的HQL语句与具体使用的数据库无关，移植性很好。MyBatis项目中所有的SQL语句都是依赖所用的数据库的，所以不同数据库类型的支持不好。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h1 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">第四章</font> <font face="微软雅黑">对象管理与抓取策略</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">对象管理</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate&nbsp;是完整的对象/关系映射解决方案，它提供了对象状态管理（state management）的功能，使开发者不再需要理会底层数据库系统的细节。也就是说，相对于常见的&nbsp;JDBC/SQL&nbsp;持久层方案中需要管理&nbsp;SQL&nbsp;语句，Hibernate采用了更自然的面向对象的视角来持久化&nbsp;Java&nbsp;应用中的数据。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">换句话说，使用</font>&nbsp;Hibernate&nbsp;的开发者应该总是关注对象的状态（state），不必考虑&nbsp;SQL&nbsp;语句的执行。这部分细节已经由&nbsp;Hibernate&nbsp;掌管妥当，只有开发者在进行系统性能调优的时候才需要进行了解。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">而</font>MyBatis在这一块没有文档说明，用户需要对对象自己进行详细的管理。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">抓取策略</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate对实体关联对象的抓取有着良好的机制。对于每一个关联关系都可以详细地设置是否延迟加载，并且提供关联抓取、查询抓取、子查询抓取、批量抓取四种模式。 它是详细配置和处理的。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">而</font>Mybatis的延迟加载是全局配置的。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h1 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">第五章</font> <font face="微软雅黑">缓存机制对比</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate缓存</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate一级缓存是Session缓存，利用好一级缓存就需要对Session的生命周期进行管理好。建议在一个Action操作中使用一个Session。一级缓存需要对Session进行严格管理。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate二级缓存是SessionFactory级的缓存。&nbsp;SessionFactory的缓存分为内置缓存和外置缓存。内置缓存中存放的是SessionFactory对象的一些集合属性包含的数据(映射元素据及预定SQL语句等),对于应用程序来说,它是只读的。外置缓存中存放的是数据库数据的副本,其作用和一级缓存类似.二级缓存除了以内存作为存储介质外,还可以选用硬盘等外部存储设备。二级缓存称为进程级缓存或SessionFactory级缓存，它可以被所有session共享，它的生命周期伴随着SessionFactory的生命周期存在和消亡。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis缓存</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis&nbsp;包含一个非常强大的查询缓存特性,它可以非常方便地配置和定制。MyBatis 3&nbsp;中的缓存实现的很多改进都已经实现了,使得它更加强大而且易于配置。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">默认情况下是没有开启缓存的</font>,除了局部的&nbsp;session&nbsp;缓存,可以增强变现而且处理循环 依赖也是必须的。要开启二级缓存,你需要在你的&nbsp;SQL&nbsp;映射文件中添加一行:&nbsp; &lt;cache/&gt;</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">字面上看就是这样。这个简单语句的效果如下</font>:</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>1.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">映射语句文件中的所有</font>&nbsp;select&nbsp;语句将会被缓存。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>2.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">映射语句文件中的所有</font>&nbsp;insert,update&nbsp;和&nbsp;delete&nbsp;语句会刷新缓存。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>3.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">缓存会使用</font>&nbsp;Least Recently Used(LRU,最近最少使用的)算法来收回。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>4.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">根据时间表</font>(比如&nbsp;no Flush Interval,没有刷新间隔),&nbsp;缓存不会以任何时间顺序 来刷新。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>5.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">缓存会存储列表集合或对象</font>(无论查询方法返回什么)的&nbsp;1024&nbsp;个引用。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>6.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">缓存会被视为是</font>&nbsp;read/write(可读/可写)的缓存,意味着对象检索不是共享的,而 且可以安全地被调用者修改,而不干扰其他调用者或线程所做的潜在修改。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">所有的这些属性都可以通过缓存元素的属性来修改。</font></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">比如</font>: &lt;cache &nbsp;eviction="FIFO"&nbsp; flushInterval="60000"&nbsp; size="512"&nbsp; readOnly="true"/&gt;</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">这个更高级的配置创建了一个</font>&nbsp;FIFO&nbsp;缓存,并每隔&nbsp;60&nbsp;秒刷新,存数结果对象或列表的&nbsp;512&nbsp;个引用,而且返回的对象被认为是只读的,因此在不同线程中的调用者之间修改它们会 导致冲突。可用的收回策略有,&nbsp;默认的是&nbsp;LRU:</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>1.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">LRU&nbsp;–&nbsp;最近最少使用的:移除最长时间不被使用的对象。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>2.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">FIFO&nbsp;–&nbsp;先进先出:按对象进入缓存的顺序来移除它们。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>3.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">SOFT&nbsp;–&nbsp;软引用:移除基于垃圾回收器状态和软引用规则的对象。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.333rem;background:rgb(255,255,255);"><span>4.<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">WEAK&nbsp;–&nbsp;弱引用:更积极地移除基于垃圾收集器状态和弱引用规则的对象。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">flushInterval(刷新间隔)可以被设置为任意的正整数,而且它们代表一个合理的毫秒 形式的时间段。默认情况是不设置,也就是没有刷新间隔,缓存仅仅调用语句时刷新。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">size(引用数目)可以被设置为任意正整数,要记住你缓存的对象数目和你运行环境的 可用内存资源数目。默认值是1024。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">readOnly(只读)属性可以被设置为&nbsp;true&nbsp;或&nbsp;false。只读的缓存会给所有调用者返回缓 存对象的相同实例。因此这些对象不能被修改。这提供了很重要的性能优势。可读写的缓存 会返回缓存对象的拷贝(通过序列化)&nbsp;。这会慢一些,但是安全,因此默认是&nbsp;false。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">相同点</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate和Mybatis的二级缓存除了采用系统默认的缓存机制外，都可以通过实现你自己的缓存或为其他第三方缓存方案，创建适配器来完全覆盖缓存行为。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">不同点</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的二级缓存配置在SessionFactory生成的配置文件中进行详细配置，然后再在具体的表-对象映射中配置是那种缓存。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis的二级缓存配置都是在每个具体的表-对象映射中进行详细配置，这样针对不同的表可以自定义不同的缓存机制。并且Mybatis可以在命名空间中共享相同的缓存配置和实例，通过Cache-ref来实现。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">两者比较</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">因为</font>Hibernate对查询对象有着良好的管理机制，用户无需关心SQL。所以在使用二级缓存时如果出现脏数据，系统会报出错误并提示。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="p" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:11.2500pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">而</font>MyBatis在这一方面，使用二级缓存时需要特别小心。如果不能完全确定数据更新操作的波及范围，避免Cache的盲目使用。否则，脏数据的出现会给系统的正常运行带来很大的隐患。</span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;"><o:p></o:p></span></p><h1 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">第六章</font>&nbsp;Hibernate与Mybatis对比总结</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:3rem;"><o:p></o:p></span></b></h1><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">两者相同点</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate与MyBatis都可以是通过SessionFactoryBuider由XML配置文件生成SessionFactory，然后由SessionFactory&nbsp;生成Session，最后由Session来开启执行事务和SQL语句。其中SessionFactoryBuider，SessionFactory，Session的生命周期都是差不多的。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate和MyBatis都支持JDBC和JTA事务处理。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Mybatis优势</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis可以进行更为细致的SQL优化，可以减少查询字段。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">MyBatis容易掌握，而Hibernate门槛较高。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate优势</span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的DAO层开发比MyBatis简单，Mybatis需要维护SQL和结果映射。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate对对象的维护和缓存要比MyBatis好，对增删改查的对象的维护要方便。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate数据库移植性很好，MyBatis的数据库移植性不好，不同的数据库需要写不同SQL。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate有更好的二级缓存机制，可以使用第三方缓存。MyBatis本身提供的缓存机制不佳。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><h2 style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:0.0000pt;text-indent:0.0000pt;padding:0pt 0pt 0pt 0pt;background:rgb(255,255,255);"><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);"><font face="微软雅黑">他人总结</font></span><b><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:bold;font-style:normal;font-size:2.5rem;"><o:p></o:p></span></b></h2><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate功能强大，数据库无关性好，O/R映射能力强，如果你对Hibernate相当精通，而且对Hibernate进行了适当的封装，那么你的项目整个持久层代码会相当简单，需要写的代码很少，开发速度很快，非常爽。&nbsp;</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">Hibernate的缺点就是学习门槛不低，要精通门槛更高，而且怎么设计O/R映射，在性能和对象模型之间如何权衡取得平衡，以及怎样用好Hibernate方面需要你的经验和能力都很强才行。&nbsp;</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">iBATIS入门简单，即学即用，提供了数据库查询的自动对象绑定功能，而且延续了很好的SQL使用经验，对于没有那么高的对象模型要求的项目来说，相当完美。&nbsp;</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal" style="margin-top:0.0000pt;margin-right:0.0000pt;margin-bottom:0.0000pt;margin-left:15.0000pt;text-indent:-18.0000pt;padding:0pt 0pt 0pt 0pt;"><span style="font-family:Symbol;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.111rem;background:rgb(255,255,255);"><span>·<span>&nbsp;</span></span></span><span style="font-family:微软雅黑;color:rgb(69,69,69);font-weight:normal;font-style:normal;font-size:1.167rem;background:rgb(255,255,255);">iBATIS的缺点就是框架还是比较简陋，功能尚有缺失，虽然简化了数据绑定代码，但是整个底层数据库查询实际还是要自己写的，工作量也比较大，而且不太容易适应快速数据库修改。</span><span style="font-family:Calibri;font-weight:normal;font-size:1.167rem;"><o:p></o:p></span></p><p class="MsoNormal"><span style="font-family:Calibri;font-size:1.167rem;"><o:p>&nbsp;</o:p></span></p></body></html>

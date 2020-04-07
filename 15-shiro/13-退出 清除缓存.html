@@ -1,0 +1,64 @@
+<!DOCTYPE HTML><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>13-退出 清除缓存</title>
+    
+<style id="wiz_custom_css">html, body {font-size: 12pt;}body {font-family: Helvetica, 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei UI', SimSun, SimHei, arial, sans-serif;line-height: 1.6;margin: 0 auto;padding: 20px 16px;padding: 1.25rem 1rem;}h1, h2, h3, h4, h5, h6 {margin:20px 0 10px;margin:1.25rem 0 0.625rem;padding: 0;font-weight: bold;}h1 {font-size:20pt;font-size:1.67rem;}h2 {font-size:18pt;font-size:1.5rem;}h3 {font-size:15pt;font-size:1.25rem;}h4 {font-size:14pt;font-size:1.17rem;}h5 {font-size:12pt;font-size:1rem;}h6 {font-size:12pt;font-size:1rem;color: #777777;margin: 1rem 0;}div, p, ul, ol, dl, li {margin:0;}blockquote, table, pre, code {margin:8px 0;}ul, ol {padding-left:32px;padding-left:2rem;}ol.wiz-list-level1 > li {list-style-type:decimal;}ol.wiz-list-level2 > li {list-style-type:lower-latin;}ol.wiz-list-level3 > li {list-style-type:lower-roman;}blockquote {padding:0 12px;padding:0 0.75rem;}blockquote > :first-child {margin-top:0;}blockquote > :last-child {margin-bottom:0;}img {border:0;max-width:100%;height:auto !important;margin:2px 0;}table {border-collapse:collapse;border:1px solid #bbbbbb;}td, th {padding:4px 8px;border-collapse:collapse;border:1px solid #bbbbbb;min-height:28px;word-break:break-all;box-sizing: border-box;}.wiz-hide {display:none !important;}</style></head>
+
+<body class="" spellcheck="false" ><div><pre><div><h2></h2><h2><span data-wiz-span="data-wiz-span" style="font-family: Hack;">登录</span></h2><h3><span data-wiz-span="data-wiz-span" style="font-family: Hack;">原理</span></h3>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">使用** FormAuthenticationFilter**过滤器实现, 原理如下:</span><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">
+用户没有认证时, 就会请求 loginurl进行认证, 用户身份和用户密码提交数据到loginurl地址.</span></p>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">数据提交到 loginurl 地址后, 由** FormAuthenticationFilter**进行拦截, 并取出 request 中的username 和 password.</span></p>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">然后** FormAuthenticationFilter** 会调用 realm, 在进行调用时会传入一个 token, 也就是会传入username 和 password.</span></p>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">最后 realm 认真时根据 username 查询用户信息.例如我们之前查询了用户菜单和 url.</span></p>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">如果查询不到, realm 返回 null, ** FormAuthenticationFilter**向 request 域填充一个参数, 这个参数记录了异常信息.</span></p>
+<h3><span data-wiz-span="data-wiz-span" style="font-family: Hack;">实现</span></h3>
+<pre class="hljs undefined"><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">    //登陆提交地址，和applicationContext-shiro.xml中配置的loginurl一致
+    @RequestMapping("login")
+    public String login(HttpServletRequest request)throws Exception{
+        
+        //如果登陆失败从request中获取认证异常信息，shiroLoginFailure就是shiro异常类的全限定名
+        String exceptionClassName = (String) request.getAttribute("shiroLoginFailure");
+        //根据shiro返回的异常类路径判断，抛出指定异常信息
+        if(exceptionClassName!=null){
+            if (UnknownAccountException.class.getName().equals(exceptionClassName)) {
+                //最终会抛给异常处理器
+                throw new CustomException("账号不存在");
+            } else if (IncorrectCredentialsException.class.getName().equals(
+                    exceptionClassName)) {
+                throw new CustomException("用户名/密码错误");
+            } else if("randomCodeError".equals(exceptionClassName)){
+                throw new CustomException("验证码错误 ");
+            }else {
+                throw new Exception();//最终在异常处理器生成未知错误
+            }
+        }
+        //此方法不处理登陆成功（认证成功），shiro认证成功会自动跳转到上一个请求路径
+        //登陆失败还到login页面
+        return "login";
+    }
+</span></code></pre>
+<blockquote>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">这里一定要注意我们写的这个 </span><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">login()</span></code><span data-wiz-span="data-wiz-span" style="font-family: Hack;"> 方法, 只是负责处理认证失败的结果, 如果用户认证成功那么就会跳转到上一个请求路径.</span></p>
+</blockquote>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">什么是上一个请求路径呢?</span><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">
+答: 如果你要访问 </span><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">xxxx.jsp</span></code><span data-wiz-span="data-wiz-span" style="font-family: Hack;"> 但是 shiro 发现你还没有登录, 就会进行拦截, 并跳转到登录界面例如</span><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">login.jsp</span></code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">, 当认证成功后会跳转到</span><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">xxxx.jsp</span></code></p>
+<h3><span data-wiz-span="data-wiz-span" style="font-family: Hack;">认证拦截过滤器配置</span></h3>
+<pre class="hljs undefined"><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">&lt;!-- 对静态资源设置匿名访问 --&gt;
+/images/** = anon
+/js/** = anon
+/styles/** = anon
+&lt;!-- /** = authc 所有url都必须认证通过才可以访问--&gt;
+/** = authc
+</span></code></pre>
+<hr style="font-family: Hack;">
+<h2><span data-wiz-span="data-wiz-span" style="font-family: Hack;">退出</span></h2>
+<p><span data-wiz-span="data-wiz-span" style="font-family: Hack;">不用我们实现退出, 只要访问一个退出 url, 由</span><strong><span data-wiz-span="data-wiz-span" style="font-family: Hack;">LogoutFilter</span></strong><span data-wiz-span="data-wiz-span" style="font-family: Hack;">拦截住, 清除 session.</span></p>
+<pre class="hljs undefined"><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">&lt;!-- 请求 logout.action地址，shiro去清除session--&gt;
+/logout.action = logout
+</span></code></pre>
+<h2><span data-wiz-span="data-wiz-span" style="font-family: Hack;">从 Shiro 的 session 中获取认证信息</span></h2>
+<pre class="hljs undefined"><code><span data-wiz-span="data-wiz-span" style="font-family: Hack;">//因为我们用过 Shiro 用户认证后是存放在 Shiro 的 session 中.
+Subject subject = SecurityUtils.getSubject();
+//取出身份信息
+subject.getPrincipal();</span></code></pre></div><br><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">作者：我相信你爱过gg</span><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">链接：http://www.jianshu.com/p/c3360fec72cc</span><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">來源：简书</span><br><span data-wiz-span="data-wiz-span" style="font-family: Hack;">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span></pre><br></div></body></html>

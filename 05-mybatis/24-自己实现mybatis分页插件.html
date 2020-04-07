@@ -1,0 +1,258 @@
+<!DOCTYPE HTML><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>24-自己实现mybatis分页插件</title>
+    
+<style id="wiz_custom_css">html, body {font-size: 12pt;}body {font-family: Helvetica, 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei UI', SimSun, SimHei, arial, sans-serif;line-height: 1.6;margin: 0 auto;padding: 20px 16px;padding: 1.25rem 1rem;}h1, h2, h3, h4, h5, h6 {margin:20px 0 10px;margin:1.25rem 0 0.625rem;padding: 0;font-weight: bold;}h1 {font-size:20pt;font-size:1.67rem;}h2 {font-size:18pt;font-size:1.5rem;}h3 {font-size:15pt;font-size:1.25rem;}h4 {font-size:14pt;font-size:1.17rem;}h5 {font-size:12pt;font-size:1rem;}h6 {font-size:12pt;font-size:1rem;color: #777777;margin: 1rem 0;}div, p, ul, ol, dl, li {margin:0;}blockquote, table, pre, code {margin:8px 0;}ul, ol {padding-left:32px;padding-left:2rem;}ol.wiz-list-level1 > li {list-style-type:decimal;}ol.wiz-list-level2 > li {list-style-type:lower-latin;}ol.wiz-list-level3 > li {list-style-type:lower-roman;}blockquote {padding:0 12px;padding:0 0.75rem;}blockquote > :first-child {margin-top:0;}blockquote > :last-child {margin-bottom:0;}img {border:0;max-width:100%;height:auto !important;margin:2px 0;}table {border-collapse:collapse;border:1px solid #bbbbbb;}td, th {padding:4px 8px;border-collapse:collapse;border:1px solid #bbbbbb;min-height:28px;word-break:break-all;box-sizing: border-box;}.wiz-hide {display:none !important;}</style></head>
+
+<body class=""  spellcheck="false"><div>
+    <div class="art_desc mt10" style="margin:10px 5px;padding:10px;background:rgb(246, 251, 255);color:rgb(51, 51, 51);border-left:3px solid rgb(59, 176, 219);font-size:0.875rem;font-family:tahoma, arial, 宋体;font-style:normal;font-weight:normal;text-align:start;text-indent:0px;"><div id="art_demo" style="margin:0px;padding:0px;"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">最近做了个项目，需要用到mybatis分页功能，网上找了很多插件，都不太合适，于是就自己动手写了个mybatis分页插件功能，非常不错，代码简单易懂，需要的朋友参考下吧</span></div></div><div class="lbd clearfix" style="margin:5px auto;padding:0px;width:680px;text-align:center;color:rgb(0, 0, 0);font-family:tahoma, arial, 宋体;font-size:0.75rem;font-style:normal;font-weight:normal;text-indent:0px;background-color:rgb(255, 255, 255);"><span id="art_up" class="jbTestPos"></span></div><div id="content" style="margin:0px 10px;padding:20px 5px 0px;width:660px;text-align:left;font-size:0.875rem;color:rgb(0, 0, 0);font-family:tahoma, arial, 宋体;font-style:normal;font-weight:normal;text-indent:0px;background-color:rgb(255, 255, 255);"><p style="margin:0px;padding:5px 0px;font-size:0.875rem;"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">刚开始项目，需要用到mybatis分页，网上看了很多插件，其实实现原理基本都大同小异，但是大部分都只给了代码，注释不全，所以参考了很多篇文章（每篇文章偷一点代码，评出来自己的，半抄袭），才自己模仿着写出了一个适合自己项目的分页插件，话不多说，直接上代码，相比大部分文章，注释算很完整了</span></p><p style="margin:0px;padding:5px 0px;font-size:0.875rem;"><strong><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">最重要的拦截器</span></strong></p><div class="jb51code" style="margin:0px;padding:0px;font-size:0.875rem;width:660px;text-align:left;"><pre class="brush:java;" style="margin:3px auto 0px;padding:0px 0px 0px 5px;background:rgb(255, 255, 255);width:640px;font-size:0.875rem;border-left:3px solid rgb(108, 226, 108);"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">package com.dnkx.interceptor; 
+import java.sql.*; 
+import java.util.HashMap; 
+import java.util.Properties; 
+import org.apache.ibatis.executor.resultset.ResultSetHandler; 
+import org.apache.ibatis.executor.statement.StatementHandler; 
+import org.apache.ibatis.mapping.BoundSql; 
+import org.apache.ibatis.mapping.MappedStatement; 
+import org.apache.ibatis.plugin.Interceptor; 
+import org.apache.ibatis.plugin.Intercepts; 
+import org.apache.ibatis.plugin.Invocation; 
+import org.apache.ibatis.plugin.Plugin; 
+import org.apache.ibatis.plugin.Signature; 
+import org.apache.ibatis.reflection.MetaObject; 
+import org.apache.ibatis.reflection.SystemMetaObject; 
+import com.dnkx.pojo.Page; 
+/** 
+* 
+* 分页拦截器，用于拦截需要进行分页查询的操作，然后对其进行分页处理。 
+* 利用拦截器实现Mybatis分页的原理： 
+* 要利用JDBC对数据库进行操作就必须要有一个对应的Statement对象，Mybatis在执行Sql语句前就会产生一个包含Sql语句的Statement对象，而且对应的Sql语句 
+* 是在Statement之前产生的，所以我们就可以在它生成Statement之前对用来生成Statement的Sql语句下手。在Mybatis中Statement语句是通过RoutingStatementHandler对象的 
+* prepare方法生成的。所以利用拦截器实现Mybatis分页的一个思路就是拦截StatementHandler接口的prepare方法，然后在拦截器方法中把Sql语句改成对应的分页查询Sql语句，之后再调用 
+* StatementHandler对象的prepare方法，即调用invocation.proceed()。 
+* 对于分页而言，在拦截器里面我们还需要做的一个操作就是统计满足当前条件的记录一共有多少，这是通过获取到了原始的Sql语句后，把它改为对应的统计语句再利用Mybatis封装好的参数和设 
+* 置参数的功能把Sql语句中的参数进行替换，之后再执行查询记录数的Sql语句进行总记录数的统计。 
+* 
+* 解释一下插件中可能要用到的几个类： 
+* MetaObject：mybatis提供的一个基于返回获取属性值的对象的类 
+* BoundSql : 在这个里面可以获取都要执行的sql和执行sql要用到的参数 
+* MappedStatement ： 这个可以得到当前执行的sql语句在xml文件中配置的id的值 
+* RowBounds : 是mybatis内存分页要用到的。 
+* ParameterHandler ： 是mybatis中用来替换sql中?出现的值的. 
+* 
+* @author 李小拐 2016年11月9日 10:59:04 
+*/ 
+@Intercepts({ 
+@Signature(type=StatementHandler.class,method="prepare",args={Connection.class}), 
+@Signature(type = ResultSetHandler.class, method = "handleResultSets", args = {Statement.class}) 
+}) 
+public class PageInterceptor implements Interceptor{ 
+//拦截分页关键字 
+private static final String SELECT_ID="page"; 
+//插件运行的代码，它将代替原有的方法,要重写最重要的intercept了 
+@Override 
+public Object intercept(Invocation invocation) throws Throwable { 
+if (invocation.getTarget() instanceof StatementHandler) { 
+//这里我们有一个设定 如果查询方法含有Page 就进行分页 其他方法无视 
+//所以就要获取方法名 
+StatementHandler statementHandler=(StatementHandler)invocation.getTarget(); 
+MetaObject metaObject=SystemMetaObject.forObject(statementHandler); 
+MappedStatement mappedStatement=(MappedStatement)metaObject.getValue("delegate.mappedStatement"); 
+String selectId=mappedStatement.getId(); 
+String methorName=selectId.substring(selectId.lastIndexOf(".")+1).toLowerCase(); 
+//然后判断下 如果含有Page 就获取sql 
+if(methorName.contains(SELECT_ID)){ 
+BoundSql boundSql=(BoundSql)metaObject.getValue("delegate.boundSql"); 
+//分页参数作为参数对象parameterObject的一个属性 
+String sql=boundSql.getSql(); 
+System.out.println("获取到的sql:"+sql); 
+HashMap&lt;String, Object&gt; map=(HashMap&lt;String, Object&gt;)(boundSql.getParameterObject()); 
+//Page page=(Page)(boundSql.getParameterObject()); 
+Page page=(Page)map.get("page"); 
+// 重写sql 
+String countSql=concatCountSql(sql); 
+String pageSql=concatPageSql(sql,page); 
+// System.out.println("重写的 count sql :"+countSql); 
+System.out.println("重写的 select sql :"+pageSql); 
+Connection connection = (Connection) invocation.getArgs()[0]; 
+PreparedStatement countStmt = null; 
+ResultSet rs = null; 
+int totalCount = 0; 
+try { 
+countStmt = connection.prepareStatement(countSql); 
+rs = countStmt.executeQuery(); 
+if (rs.next()) { 
+totalCount = rs.getInt(1); 
+} 
+} catch (SQLException e) { 
+System.out.println("Ignore this exception"+e); 
+} finally { 
+try { 
+rs.close(); 
+countStmt.close(); 
+} catch (SQLException e) { 
+System.out.println("Ignore this exception"+ e); 
+} 
+} 
+metaObject.setValue("delegate.boundSql.sql", pageSql); 
+//绑定count 
+page.setNumCount(totalCount); 
+} 
+} 
+return invocation.proceed(); 
+} 
+// 拦截类型StatementHandler,重写plugin方法 
+@Override 
+public Object plugin(Object target) { 
+if (target instanceof StatementHandler) { 
+return Plugin.wrap(target, this); 
+}else { 
+return target; 
+} 
+} 
+@Override 
+public void setProperties(Properties properties) { 
+} 
+//改造sql 
+public String concatCountSql(String sql){ 
+//StringBuffer sb=new StringBuffer("select count(*) from "); 
+/*sql=sql.toLowerCase(); 
+if(sql.lastIndexOf("order")&gt;sql.lastIndexOf(")")){ 
+sb.append(sql.substring(sql.indexOf("from")+4, sql.lastIndexOf("order"))); 
+}else{ 
+sb.append(sql.substring(sql.indexOf("from")+4)); 
+}*/ 
+StringBuffer sb=new StringBuffer(); 
+sql=sql.toLowerCase(); 
+if(sql.lastIndexOf("order")&gt;0){ 
+sql=sql.substring(0,sql.indexOf("order")); 
+} 
+sb.append("select count(*) from ("+sql+") tmp"); 
+return sb.toString(); 
+} 
+public String concatPageSql(String sql,Page page){ 
+StringBuffer sb=new StringBuffer(); 
+sb.append(sql); 
+sb.append(" limit ").append(page.getPageBegin()).append(" , ").append(page.getPageSize()); 
+return sb.toString(); 
+} 
+} 
+分页对象Page类
+[java] view plain copy
+package com.dnkx.pojo; 
+import java.util.HashMap; 
+import java.util.Map; 
+/** 
+* 
+* 分页查询辅助类 
+* @author 李小拐 2016年11月9日 13:55:37 
+*/ 
+public class Page { 
+//----------分页----------- 
+private int pageSize;//每页显示条数 
+private int pageCurrentPage;//第几页 
+private int pageBegin;//开始位置 
+private int numCount;//总条数 
+private int pageTotal;//总条数 
+private String orderField = "";//控制排序页面显示的 
+private String orderDirection = ""; 
+public Page(){ 
+} 
+public Page(int pageSize, int pageCurrentPage) { 
+super(); 
+this.pageSize = pageSize; 
+this.pageCurrentPage = pageCurrentPage; 
+} 
+public Page(Map&lt;String, String&gt; map){ 
+if(map.get("pageNum")!=null){ 
+this.setPageCurrentPage(this.pageCurrentPage = Integer.parseInt(map.get("pageNum")));//要查询的页数 
+}else{ 
+this.setPageCurrentPage(1);//设置初始值 
+} 
+if(map.get("numPerPage")!=null){ 
+this.setPageSize(Integer.parseInt(map.get("numPerPage")));//每页显示条数 
+}else{ 
+this.setPageSize(5);//设置初始值 
+} 
+if(map.get("orderField")!=null){ 
+this.setOrderField(map.get("orderField")); 
+} 
+if(map.get("orderDirection")!=null){ 
+this.setOrderDirection(map.get("orderDirection")); 
+} 
+} 
+public int getPageCurrentPage() { 
+return pageCurrentPage; 
+} 
+public void setPageCurrentPage(int pageCurrentPage) { 
+this.pageCurrentPage = pageCurrentPage; 
+} 
+public int getNumCount() { 
+return numCount; 
+} 
+public void setNumCount(int numCount) { 
+this.numCount = numCount; 
+} 
+public int getPageTotal() { 
+return (numCount%pageSize&gt;0)?(numCount/pageSize+1):(numCount/pageSize); 
+} 
+public void setPageTotal(int pageTotal) { 
+this.pageTotal = pageTotal; 
+} 
+public int getPageSize() { 
+return pageSize; 
+} 
+public void setPageSize(int pageSize) { 
+this.pageSize = pageSize; 
+} 
+public int getPageBegin() { 
+return pageSize*(pageCurrentPage-1); 
+} 
+public void setPageBegin(int pageBegin) { 
+this.pageBegin = pageBegin; 
+} 
+public String getOrderField() { 
+return orderField; 
+} 
+public void setOrderField(String orderField) { 
+this.orderField = orderField; 
+} 
+public String getOrderDirection() { 
+return orderDirection; 
+} 
+public void setOrderDirection(String orderDirection) { 
+this.orderDirection = orderDirection; 
+} 
+public static Page getPage(int pageSize, int pageCurrentPage){ 
+return new Page(pageSize,pageCurrentPage); 
+} 
+public static Page getPage(Map map){ 
+return new Page(map); 
+} 
+}</span></pre></div><p style="margin:0px;padding:5px 0px;font-size:0.875rem;"><strong><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">Controller里面调用方式</span></strong></p><div class="jb51code" style="margin:0px;padding:0px;font-size:0.875rem;width:660px;text-align:left;"><pre class="brush:java;" style="margin:3px auto 0px;padding:0px 0px 0px 5px;background:rgb(255, 255, 255);width:640px;font-size:0.875rem;border-left:3px solid rgb(108, 226, 108);"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">public String list(HttpServletRequest request) { 
+long a=System.currentTimeMillis(); 
+HashMap&lt;String,Object&gt; map=GetRequestMap.getMap(request);//自己封装的方法，取request的参数 
+Page page= Page.getPage(map);//初始化page 
+map.put("page", page);//把page对象放入参数集合(这个map是mybatis要用到的，包含查询条件，排序，分页等) 
+//控制排序页面显示的 
+map.put(map.get("orderField")+"", map.get("orderDirection")); 
+List&lt;Employee&gt; list=employeeService.getListPage(map); 
+request.setAttribute("emlist", list); 
+request.setAttribute("page", page); 
+request.setAttribute("map", map); 
+//取page相关属性 
+page.getNumCount();//总条数 
+page.getPageTotal();//总页数 
+long b=System.currentTimeMillis(); 
+System.out.println("---------耗时:"+(b-a)+"ms"); 
+return "basic/employee_list"; 
+}</span></pre></div><p style="margin:0px;padding:5px 0px;font-size:0.875rem;"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">最后，spring里面配置插件</span></p><div class="jb51code" style="margin:0px;padding:0px;font-size:0.875rem;width:660px;text-align:left;"><pre class="brush:java;" style="margin:3px auto 0px;padding:0px 0px 0px 5px;background:rgb(255, 255, 255);width:640px;font-size:0.875rem;border-left:3px solid rgb(108, 226, 108);"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">&lt;bean id="PageInterector" class="com.dnkx.interceptor.PageInterceptor"&gt;&lt;/bean&gt; 
+&lt;!-- spring和MyBatis完美整合，不需要mybatis的配置映射文件 --&gt; 
+&lt;bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"&gt; 
+&lt;property name="dataSource" ref="dataSource" /&gt; 
+&lt;!-- 自动扫描mapping.xml文件 --&gt; 
+&lt;property name="mapperLocations" value="classpath:com/dnkx/mapping/*.xml"&gt;&lt;/property&gt; 
+&lt;property name="plugins"&gt; 
+&lt;ref bean="PageInterector"/&gt; 
+&lt;/property&gt; 
+&lt;/bean&gt;</span></pre></div><p style="margin:0px;padding:5px 0px;font-size:0.875rem;"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">好了，到此结束，本文仅供参考！也期待大神提意见</span></p><br><div style="color:gray;"><small><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">来源：&nbsp;</span><a href="http://www.jb51.net/article/97147.htm"><span data-wiz-span="data-wiz-span" style="font-family: 'Lucida Console'; font-size: 1rem;">http://www.jb51.net/article/97147.htm</span></a></small></div></div><br></div></body></html>

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>06-Gradle和Maven</title>
+    
+<style id="wiz_custom_css">html, body {font-size: 12pt;}body {font-family: Helvetica, 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei UI', SimSun, SimHei, arial, sans-serif;line-height: 1.6;margin: 0 auto;padding: 20px 16px;padding: 1.25rem 1rem;}h1, h2, h3, h4, h5, h6 {margin:20px 0 10px;margin:1.25rem 0 0.625rem;padding: 0;font-weight: bold;}h1 {font-size:20pt;font-size:1.67rem;}h2 {font-size:18pt;font-size:1.5rem;}h3 {font-size:15pt;font-size:1.25rem;}h4 {font-size:14pt;font-size:1.17rem;}h5 {font-size:12pt;font-size:1rem;}h6 {font-size:12pt;font-size:1rem;color: #777777;margin: 1rem 0;}div, p, ul, ol, dl, li {margin:0;}blockquote, table, pre, code {margin:8px 0;}ul, ol {padding-left:32px;padding-left:2rem;}ol.wiz-list-level1 > li {list-style-type:decimal;}ol.wiz-list-level2 > li {list-style-type:lower-latin;}ol.wiz-list-level3 > li {list-style-type:lower-roman;}blockquote {padding:0 12px;padding:0 0.75rem;}blockquote > :first-child {margin-top:0;}blockquote > :last-child {margin-bottom:0;}img {border:0;max-width:100%;height:auto !important;margin:2px 0;}table {border-collapse:collapse;border:1px solid #bbbbbb;}td, th {padding:4px 8px;border-collapse:collapse;border:1px solid #bbbbbb;min-height:28px;word-break:break-all;box-sizing: border-box;}.wiz-hide {display:none !important;}</style></head>
+
+<body class=""  spellcheck="false"><div><meta charset="utf-8"><div>作者：EZLippi<br>链接：<a href="https://www.zhihu.com/question/29338218/answer/51293828">https://www.zhihu.com/question/29338218/answer/51293828</a></div><div><br><div>Gradle和Maven都是项目自动构建工具，编译源代码只是整个过程的一个方面，更重要的是，你要把你的软件发布到生产环境中来产生商业价值，所以，你要运行测试，构建分布、分析代码质量、甚至为不同目标环境提供不同版本，然后部署。整个过程进行自动化操作是很有必要的。<br><p>整个过程可以分成以下几个步骤：</p><ul><li>编译源代码</li><li>运行单元测试和集成测试</li><li>执行静态代码分析、生成分析报告</li><li>创建发布版本</li><li>部署到目标环境</li><li>部署传递过程</li><li>执行冒烟测试和自动功能测试</li></ul>如果你手工去执行每一个步骤无疑效率比较低而且容易出错，有了自动化构建你只需要自定义你的构建逻辑，剩下的事情交给工具去完成。<br><br>虽然两者都是项目工具，但是maven现在已经是行业标准，Gradle是后起之秀，很多人对他的了解都是从android studio中得到的，Gradle抛弃了Maven的基于XML的繁琐配置，众所周知XML的阅读体验比较差，对于机器来说虽然容易识别，但毕竟是由人去维护的。取而代之的是Gradle采用了领域特定语言Groovy的配置，大大简化了构建代码的行数，比如在Maven中你要引入一个依赖：<br><div class="highlight"><pre><code class="language-text"><span></span>&lt;properties&gt;
+        &lt;kaptcha.version&gt;2.3&lt;/kaptcha.version&gt;
+    &lt;/properties&gt;
+&lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.google.code.kaptcha&lt;/groupId&gt;
+            &lt;artifactId&gt;kaptcha&lt;/artifactId&gt;
+            &lt;version&gt;${kaptcha.version}&lt;/version&gt;
+            &lt;classifier&gt;jdk15&lt;/classifier&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-core&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-beans&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre></div><p>然后我将其转换成Gradle脚本，结果是惊人的：</p><div class="highlight"><pre><code class="language-text"><span></span>dependencies {
+    compile('org.springframework:spring-core:2.5.6')
+    compile('org.springframework:spring-beans:2.5.6')
+    compile('org.springframework:spring-context:2.5.6')
+    compile('com.google.code.kaptcha:kaptcha:2.3:jdk15')
+    testCompile('junit:junit:4.7')
+}
+</code></pre></div>注意配置从原来的28行缩减至7行！这还不算我省略的一些父POM配置。依赖的groupId、artifactId、 version，scope甚至是classfier，一点都不少。较之于Maven或者Ant的XML配置脚本，Gradle使用的Grovvy脚本杀伤力太大了，爱美之心，人皆有之，相比于七旬老妇松松垮垮的皱纹，大家肯定都喜欢少女紧致的脸蛋，XML就是那老妇的皱纹。<br><br>Gradle给我最大的有点是两点。其一是简洁，基于Groovy的紧凑脚本实在让人爱不释手，在表述意图方面也没有什么不清晰的地方。其二是灵活，各种在Maven中难以下手的事情，在Gradle就是小菜一碟，比如修改现有的构建生命周期，几行配置就完成了，同样的事情，在Maven中你必须编写一个插件，那对于一个刚入门的用户来说，没个一两天几乎是不可能完成的任务。</div></div><br></div></body></html>
